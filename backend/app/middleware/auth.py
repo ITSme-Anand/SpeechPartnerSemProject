@@ -24,12 +24,12 @@ def get_current_user(
     """
     settings = get_settings()
     token = credentials.credentials
-    print('entered the auth middleware')
+    #print('entered the auth middleware')
     # Verify JWT
     try:
-        print(token)
+        #print(token)
         header = jwt.get_unverified_header(token)
-        print(header)
+        #print(header)
         jwks_client = PyJWKClient(
             f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
         )
@@ -54,7 +54,7 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token",
         )
-    print('before auth_id')
+    #print('before auth_id')
     auth_id = payload.get("sub")
     if not auth_id:
         raise HTTPException(
@@ -83,5 +83,5 @@ def get_current_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create user record",
         )
-    print('auth successful')
+    #print('auth successful')
     return insert_result.data[0]

@@ -1,42 +1,48 @@
-# Spoken English Drill App — Initial Document
+# SpeechPartner
 
-## 1. The Problem We're Solving
+SpeechPartner is a full-stack app for spoken English practice with narration analysis and interactive grammar drills.
 
-Non-native English speakers who are already confident, fluent-sounding speakers (good stage presence, no fear of speaking) often still struggle with three specific issues during spontaneous speech:
+## Quick Start (Docker)
 
-1. **Grammatical errors in real-time sentence construction** — even when writing is grammatically correct.
-2. **Word retrieval failure** — knowing the concept/idea clearly but failing to recall the specific word for it in the moment ("tip-of-the-tongue" moments).
-3. **Limited vocabulary variety** — repeatedly defaulting to the same small set of words instead of varying language naturally.
+Anyone using this project should be able to clone it and run a single command.
 
-These aren't confidence problems or knowledge problems — they show up *only* under the real-time pressure of speaking, not in writing or reading.
+1. Clone the repository.
+2. Create environment files from examples:
 
----
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
 
-## 2. Why This Happens
+3. Fill required values in:
+- `backend/.env` (Supabase service values, Groq key, Gemini key)
+- `frontend/.env` (Supabase URL + anon key)
 
-Most language learning advice (read books, watch shows, consume more content) builds **receptive/passive competence** — the ability to recognize and understand language.
+4. Start everything:
 
-It does **not** build **productive/active competence** — the ability to construct and retrieve language on demand, under time pressure, with no chance to edit.
+```bash
+docker compose up --build -d
+```
 
-These are trained differently:
-- **Input (reading/watching)** → builds recognition.
-- **Output under constraint (speaking, recalling, constructing in real time)** → builds production.
+5. Open the app:
+- Frontend: `http://localhost:5173`
+- Backend health check: `http://localhost:8000/`
 
-This explains why someone can write well and understand everything they read/hear, yet still stumble mid-sentence while speaking. The fix isn't more input — it's deliberate, repeated **output practice under time pressure**, ideally with feedback.
+## Docker Files
 
----
+- Backend image: `backend/Dockerfile`
+- Frontend image: `frontend/Dockerfile`
+- Frontend web server config: `frontend/nginx.conf`
+- Service orchestration: `docker-compose.yml`
 
-## 3. Initial Drill Ideas
+## Stop Services
 
-**Idea 1: Speak → Transcribe → Correct**
-Speak freely on a random topic (using voice input). Transcribe the speech, then get it corrected for grammatical errors only (ignoring filler words/punctuation). Log recurring error types over time to identify personal patterns.
+```bash
+docker compose down
+```
 
-**Idea 2: Random Object/Topic Description**
-Get a random everyday object or topic as a prompt. Describe it out loud under a short time limit. This trains direct word retrieval — pulling the right word fast, under pressure, rather than recognizing it passively.
+## Troubleshooting
 
-**Idea 3: Watch → Recall → Retell**
-Watch a short podcast/show segment. Afterward, retell what was watched out loud, in your own words, without re-watching. This combines memory recall, word retrieval, and sentence construction all at once — closest to real spontaneous speaking conditions.
-
----
-
-*Next: research existing apps/tools in this space, and define MVP scope.*
+- If startup fails with a Docker daemon error, start Docker Desktop first.
+- If frontend cannot call backend, verify `VITE_API_BASE_URL` in `frontend/.env`.
+- If backend fails at startup, verify required keys in `backend/.env`.

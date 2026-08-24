@@ -1,14 +1,21 @@
 /**
  * Narrate page — topic selection → record speech → submit.
  * Main landing page after login.
+ *
+ * Persistence strategy:
+ * - Topic is saved to IndexedDB as soon as it's locked (even before recording)
+ * - Audio is saved on both pause and stop (via the hook)
+ * - On reload/back-nav, everything restores: topic, locked state, audio, duration
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { useAudioRecorder, saveRecording, loadRecording, deleteRecording } from '../hooks/useAudioRecorder';
 import { submitNarration } from '../lib/api';
 import ProcessingScreen from '../components/ProcessingScreen';
-import { Mic, Shuffle, Clock, History, AlertCircle } from 'lucide-react';
+import { Mic, Shuffle, Clock, History, AlertCircle, Pause, Play, RotateCcw } from 'lucide-react';
+
+const STORAGE_KEY = 'narrate-page';
 
 const RANDOM_TOPICS = [
   'My favorite childhood memory',
@@ -25,27 +32,83 @@ const RANDOM_TOPICS = [
 
 export default function NarratePage() {
   const navigate = useNavigate();
-  const { isRecording, audioBlob, duration, startRecording, stopRecording, resetRecording, error: recorderError } = useAudioRecorder(300);
 
   const [topic, setTopic] = useState('');
   const [topicLocked, setTopicLocked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [isRecovered, setIsRecovered] = useState(false);
+  const hasRestoredRef = useRef(false);
+
+  // Provide a callback that returns current page metadata for IndexedDB saves.
+  // Uses refs internally so the hook always gets the latest topic/topicLocked
+  // without needing to re-create the callback on every render.
+  const topicRef = useRef(topic);
+  const topicLockedRef = useRef(topicLocked);
+  topicRef.current = topic;
+  topicLockedRef.current = topicLocked;
+
+  const getStorageMetadata = useCallback(() => ({
+    topic: topicRef.current,
+    topicLocked: topicLockedRef.current,
+  }), []);
+
+  const {
+    isRecording,
+    isPaused,
+    audioBlob,
+    duration,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    resetRecording,
+    discardRecording,
+    restoreRecording,
+    error: recorderError,
+  } = useAudioRecorder({ maxDurationSeconds: 300, storageKey: STORAGE_KEY, getStorageMetadata });
+
+  // ── Restore saved state on mount ──
+  useEffect(() => {
+    if (hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
+
+    loadRecording(STORAGE_KEY).then((saved) => {
+      if (!saved) return;
+
+      // Always restore topic if it was saved
+      if (saved.topic) setTopic(saved.topic);
+      if (saved.topicLocked) setTopicLocked(true);
+
+      // Restore audio if it exists
+      if (saved.blob) {
+        restoreRecording(saved.blob, saved.duration);
+        setIsRecovered(true);
+      }
+    });
+  }, [restoreRecording]);
 
   const pickRandomTopic = () => {
     const randomIndex = Math.floor(Math.random() * RANDOM_TOPICS.length);
     setTopic(RANDOM_TOPICS[randomIndex]);
   };
 
+  // Save topic to IndexedDB immediately when locked — even before any recording
   const lockTopic = () => {
     if (topic.trim()) {
       setTopicLocked(true);
+      saveRecording(STORAGE_KEY, null, {
+        duration: 0,
+        topic: topic.trim(),
+        topicLocked: true,
+      }).catch(() => {});
     }
   };
 
   const unlockTopic = () => {
     setTopicLocked(false);
     resetRecording();
+    setIsRecovered(false);
   };
 
   const handleSubmit = async () => {
@@ -56,6 +119,8 @@ export default function NarratePage() {
 
     try {
       const result = await submitNarration(audioBlob, topic.trim());
+      // Clean up saved recording on successful submit
+      await deleteRecording(STORAGE_KEY).catch(() => {});
       navigate(`/result/${result.narration_id}`, { state: result });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to submit. Please try again.';
@@ -64,10 +129,34 @@ export default function NarratePage() {
     }
   };
 
+  const handleDiscard = () => {
+    discardRecording();
+    setIsRecovered(false);
+  };
+
+  const handleKeepRecovered = () => {
+    setIsRecovered(false);
+  };
+
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Helper: get the record button class
+  const getRecordBtnClass = () => {
+    if (isPaused) return 'record-btn record-btn--paused';
+    if (isRecording) return 'record-btn record-btn--recording';
+    return 'record-btn';
+  };
+
+  // Helper: get status text
+  const getStatusText = () => {
+    if (!isRecording && !audioBlob) return 'Tap to start recording';
+    if (isRecording && !isPaused) return 'Recording... tap to stop';
+    if (isPaused) return 'Paused';
+    return 'Recording complete!';
   };
 
   // ── Processing screen ──
@@ -139,6 +228,24 @@ export default function NarratePage() {
         {/* Recording Section */}
         {topicLocked && (
           <div className="glass-card animate-slide-up" style={{ textAlign: 'center', animationDelay: '0.2s' }}>
+            {/* Recovery banner */}
+            {isRecovered && audioBlob && !isRecording && (
+              <div className="recovery-banner">
+                <div className="recovery-banner__info">
+                  <RotateCcw size={16} />
+                  <span>Previous recording recovered ({formatDuration(duration)})</span>
+                </div>
+                <div className="recovery-banner__actions">
+                  <button className="btn btn-ghost btn-sm" onClick={handleDiscard}>
+                    Discard
+                  </button>
+                  <button className="btn btn-primary btn-sm" onClick={handleKeepRecovered}>
+                    Keep
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Error display */}
             {(recorderError || submitError) && (
               <div className="alert alert--error" style={{ marginBottom: 'var(--space-lg)', textAlign: 'left' }}>
@@ -150,39 +257,65 @@ export default function NarratePage() {
             {/* Record button */}
             <div style={{ marginBottom: 'var(--space-lg)' }}>
               <p className="text-sm text-muted" style={{ marginBottom: 'var(--space-md)' }}>
-                {!isRecording && !audioBlob && 'Tap to start recording'}
-                {isRecording && 'Recording... tap to stop'}
-                {!isRecording && audioBlob && 'Recording complete!'}
+                {getStatusText()}
               </p>
 
+              {/* Recording controls */}
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-md)' }}>
-                <button
-                  className={`record-btn ${isRecording ? 'record-btn--recording' : ''}`}
-                  onClick={isRecording ? stopRecording : audioBlob ? resetRecording : startRecording}
-                  title={isRecording ? 'Stop recording' : audioBlob ? 'Record again' : 'Start recording'}
-                >
-                  <div className="record-inner" />
-                </button>
+                {(isRecording || isPaused) ? (
+                  /* ── Active recording: record button (stop) + pause/resume toggle ── */
+                  <div className="recording-controls">
+                    {/* Main record button — click to stop */}
+                    <button
+                      className={getRecordBtnClass()}
+                      onClick={stopRecording}
+                      title="Stop recording"
+                    >
+                      <div className="record-inner" />
+                    </button>
+
+                    {/* Pause / Resume toggle */}
+                    <button
+                      className={`control-btn ${isPaused ? 'control-btn--resume' : 'control-btn--pause'}`}
+                      onClick={isPaused ? resumeRecording : pauseRecording}
+                      title={isPaused ? 'Resume recording' : 'Pause recording'}
+                    >
+                      {isPaused ? <Play size={18} /> : <Pause size={18} />}
+                    </button>
+                  </div>
+                ) : (
+                  /* ── Idle: single record button ── */
+                  <button
+                    className="record-btn"
+                    onClick={audioBlob ? resetRecording : startRecording}
+                    title={audioBlob ? 'Record again' : 'Start recording'}
+                  >
+                    <div className="record-inner" />
+                  </button>
+                )}
               </div>
 
               {/* Duration */}
-              {(isRecording || audioBlob) && (
+              {(isRecording || isPaused || audioBlob) && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                   <Clock size={14} className="text-muted" />
-                  <span className={`text-sm ${isRecording ? 'text-error' : 'text-muted'}`}>
+                  <span className={`text-sm ${isRecording && !isPaused ? 'text-error' : isPaused ? 'text-warning' : 'text-muted'}`}>
                     {formatDuration(duration)}
                   </span>
-                  {isRecording && (
+                  {(isRecording || isPaused) && (
                     <span className="text-sm text-muted"> / 5:00 max</span>
+                  )}
+                  {isPaused && (
+                    <span className="badge badge--accent" style={{ fontSize: '0.7rem', marginLeft: '4px' }}>PAUSED</span>
                   )}
                 </div>
               )}
             </div>
 
             {/* Action buttons after recording */}
-            {!isRecording && audioBlob && (
+            {!isRecording && !isPaused && audioBlob && (
               <div style={{ display: 'flex', gap: 'var(--space-sm)', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button className="btn btn-ghost" onClick={() => { resetRecording(); }}>
+                <button className="btn btn-ghost" onClick={() => { resetRecording(); setIsRecovered(false); }}>
                   Record Again
                 </button>
                 <button className="btn btn-primary btn-lg" onClick={handleSubmit}>

@@ -1,15 +1,18 @@
 /**
  * Drill Scenario page — Stage 3: speak freely on a scenario prompt.
  * Records audio and submits as a drill narration.
+ *
+ * Persistence: audio is saved to IndexedDB on both pause and stop,
+ * keyed by drill ID. Survives reload & back-navigation.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { useAudioRecorder, loadRecording, deleteRecording } from '../hooks/useAudioRecorder';
 import { submitNarration } from '../lib/api';
 import ProcessingScreen from '../components/ProcessingScreen';
 import type { DrillResponse } from '../types';
-import { MessageSquare, Clock, AlertCircle, ArrowRight, AlertTriangle } from 'lucide-react';
+import { MessageSquare, Clock, AlertCircle, ArrowRight, AlertTriangle, Pause, Play, RotateCcw } from 'lucide-react';
 
 export default function DrillScenarioPage() {
   const { drillId } = useParams<{ drillId: string }>();
@@ -17,10 +20,40 @@ export default function DrillScenarioPage() {
   const navigate = useNavigate();
 
   const drill = location.state as DrillResponse | undefined;
-  const { isRecording, audioBlob, duration, startRecording, stopRecording, resetRecording, error: recorderError } = useAudioRecorder(120);
+  const storageKey = `drill-scenario-${drillId}`;
+
+  const {
+    isRecording,
+    isPaused,
+    audioBlob,
+    duration,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    resetRecording,
+    discardRecording,
+    restoreRecording,
+    error: recorderError,
+  } = useAudioRecorder({ maxDurationSeconds: 120, storageKey });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [isRecovered, setIsRecovered] = useState(false);
+  const hasRestoredRef = useRef(false);
+
+  // ── Restore saved recording on mount ──
+  useEffect(() => {
+    if (hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
+
+    loadRecording(storageKey).then((saved) => {
+      if (saved && saved.blob) {
+        restoreRecording(saved.blob, saved.duration);
+        setIsRecovered(true);
+      }
+    });
+  }, [storageKey, restoreRecording]);
 
   if (!drill || !drillId) {
     return (
@@ -47,6 +80,8 @@ export default function DrillScenarioPage() {
         true,
         drillId,
       );
+      // Clean up saved recording on successful submit
+      await deleteRecording(storageKey).catch(() => {});
       navigate(`/drill/${drillId}/summary`, { state: { drill_id: drillId, focus_error_class: drill.focus_error_class } });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to submit. Please try again.';
@@ -55,10 +90,32 @@ export default function DrillScenarioPage() {
     }
   };
 
+  const handleDiscard = () => {
+    discardRecording();
+    setIsRecovered(false);
+  };
+
+  const handleKeepRecovered = () => {
+    setIsRecovered(false);
+  };
+
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const getRecordBtnClass = () => {
+    if (isPaused) return 'record-btn record-btn--paused';
+    if (isRecording) return 'record-btn record-btn--recording';
+    return 'record-btn';
+  };
+
+  const getStatusText = () => {
+    if (!isRecording && !audioBlob) return 'Tap to start recording your response';
+    if (isRecording && !isPaused) return 'Recording... tap to stop when you are done';
+    if (isPaused) return 'Paused';
+    return 'Recording complete! Submit when ready.';
   };
 
   if (isSubmitting) {
@@ -120,6 +177,24 @@ export default function DrillScenarioPage() {
 
           {/* Recording Section */}
           <div className="glass-card" style={{ textAlign: 'center' }}>
+            {/* Recovery banner */}
+            {isRecovered && audioBlob && !isRecording && (
+              <div className="recovery-banner">
+                <div className="recovery-banner__info">
+                  <RotateCcw size={16} />
+                  <span>Previous recording recovered ({formatDuration(duration)})</span>
+                </div>
+                <div className="recovery-banner__actions">
+                  <button className="btn btn-ghost btn-sm" onClick={handleDiscard}>
+                    Discard
+                  </button>
+                  <button className="btn btn-primary btn-sm" onClick={handleKeepRecovered}>
+                    Keep
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Error display */}
             {(recorderError || submitError) && (
               <div className="alert alert--error" style={{ marginBottom: 'var(--space-lg)', textAlign: 'left' }}>
@@ -129,36 +204,60 @@ export default function DrillScenarioPage() {
             )}
 
             <p className="text-sm text-muted" style={{ marginBottom: 'var(--space-md)' }}>
-              {!isRecording && !audioBlob && 'Tap to start recording your response'}
-              {isRecording && 'Recording... tap to stop when you are done'}
-              {!isRecording && audioBlob && 'Recording complete! Submit when ready.'}
+              {getStatusText()}
             </p>
 
-            {/* Record Button */}
+            {/* Record Button / Controls */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-md)' }}>
-              <button
-                className={`record-btn ${isRecording ? 'record-btn--recording' : ''}`}
-                onClick={isRecording ? stopRecording : audioBlob ? resetRecording : startRecording}
-              >
-                <div className="record-inner" />
-              </button>
+              {(isRecording || isPaused) ? (
+                <div className="recording-controls">
+                  {/* Main record button — click to stop */}
+                  <button
+                    className={getRecordBtnClass()}
+                    onClick={stopRecording}
+                    title="Stop recording"
+                  >
+                    <div className="record-inner" />
+                  </button>
+
+                  {/* Pause / Resume toggle */}
+                  <button
+                    className={`control-btn ${isPaused ? 'control-btn--resume' : 'control-btn--pause'}`}
+                    onClick={isPaused ? resumeRecording : pauseRecording}
+                    title={isPaused ? 'Resume recording' : 'Pause recording'}
+                  >
+                    {isPaused ? <Play size={18} /> : <Pause size={18} />}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="record-btn"
+                  onClick={audioBlob ? resetRecording : startRecording}
+                  title={audioBlob ? 'Record again' : 'Start recording'}
+                >
+                  <div className="record-inner" />
+                </button>
+              )}
             </div>
 
             {/* Duration */}
-            {(isRecording || audioBlob) && (
+            {(isRecording || isPaused || audioBlob) && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: 'var(--space-lg)' }}>
                 <Clock size={14} className="text-muted" />
-                <span className={`text-sm ${isRecording ? 'text-error' : 'text-muted'}`}>
+                <span className={`text-sm ${isRecording && !isPaused ? 'text-error' : isPaused ? 'text-warning' : 'text-muted'}`}>
                   {formatDuration(duration)}
                 </span>
-                {isRecording && <span className="text-sm text-muted"> / 2:00 max</span>}
+                {(isRecording || isPaused) && <span className="text-sm text-muted"> / 2:00 max</span>}
+                {isPaused && (
+                  <span className="badge badge--accent" style={{ fontSize: '0.7rem', marginLeft: '4px' }}>PAUSED</span>
+                )}
               </div>
             )}
 
             {/* Actions */}
-            {!isRecording && audioBlob && (
+            {!isRecording && !isPaused && audioBlob && (
               <div style={{ display: 'flex', gap: 'var(--space-sm)', justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button className="btn btn-ghost" onClick={resetRecording}>
+                <button className="btn btn-ghost" onClick={() => { resetRecording(); setIsRecovered(false); }}>
                   Record Again
                 </button>
                 <button className="btn btn-primary btn-lg" onClick={handleSubmit}>

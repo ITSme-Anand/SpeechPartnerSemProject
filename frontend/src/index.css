@@ -485,6 +485,118 @@ a:hover {
   background: var(--color-error);
 }
 
+/* ── Paused State ── */
+.record-btn--paused {
+  border-color: var(--color-warning, #f59e0b);
+  animation: pausedPulse 2.5s ease-in-out infinite;
+}
+
+.record-btn--paused:hover {
+  background: rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.record-btn--paused .record-inner {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--color-warning, #f59e0b);
+}
+
+@keyframes pausedPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.2); }
+  50% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+}
+
+/* ── Recording Controls Strip ── */
+.recording-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.control-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  color: var(--color-text-secondary);
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-text-secondary);
+  color: var(--color-text-primary);
+}
+
+.control-btn--pause {
+  border-color: var(--color-warning, #f59e0b);
+  color: var(--color-warning, #f59e0b);
+}
+
+.control-btn--pause:hover {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.control-btn--resume {
+  border-color: var(--color-success, #22c55e);
+  color: var(--color-success, #22c55e);
+}
+
+.control-btn--resume:hover {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.control-btn--stop {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.control-btn--stop:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* ── Recovery Banner ── */
+.recovery-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  margin-bottom: var(--space-lg);
+  animation: slideDown 0.3s ease-out;
+}
+
+.recovery-banner__info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-warning, #f59e0b);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.recovery-banner__actions {
+  display: flex;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Divider ── */
 .divider {
   display: flex;
