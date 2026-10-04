@@ -72,6 +72,62 @@ class DrillGeneratorResponse(BaseModel):
 
 
 # ──────────────────────────────────────────────
+# Delivery Analysis (prosodic features pipeline)
+# ──────────────────────────────────────────────
+
+
+class DeliveryBaselines(BaseModel):
+    """Speaker's global baselines for pace, pitch, and loudness."""
+
+    global_pace_syll_per_sec: Optional[float] = None
+    global_pitch_hz: Optional[float] = None
+    global_loudness_db: Optional[float] = None
+
+
+class DeliveryPattern(BaseModel):
+    """A detected multi-unit delivery pattern (monotone, sustained fast/slow, etc.)."""
+
+    type: str
+    start_index: int
+    end_index: int
+    start_time: float
+    end_time: float
+
+
+class DeliveryAnalysisResult(BaseModel):
+    """Full result from the delivery analysis pipeline."""
+
+    baselines: DeliveryBaselines
+    sentence_events: list[dict]  # Rich per-sentence event dicts
+    patterns: list[DeliveryPattern]
+    delivery_feedback: str
+
+
+# ──────────────────────────────────────────────
+# Pause & Filler Events
+# ──────────────────────────────────────────────
+
+
+class PauseEvent(BaseModel):
+    """A single classified pause event."""
+
+    start: float
+    end: float
+    duration: float
+    type: str  # "natural" | "hesitation" | "lost_train_of_thought"
+
+
+class FillerEvent(BaseModel):
+    """A single detected filler event (acoustic uh/um)."""
+
+    start: float
+    end: float
+    type: str  # "uh" | "um"
+    confidence: float
+    source: str = "acoustic"
+
+
+# ──────────────────────────────────────────────
 # API Request schemas
 # ──────────────────────────────────────────────
 
@@ -112,6 +168,10 @@ class NarrationSubmitResponse(BaseModel):
     transcript: str
     feedback: list[FeedbackItem]
     summary: str
+    # New delivery fields
+    delivery: Optional[DeliveryAnalysisResult] = None
+    pause_events: Optional[list[PauseEvent]] = None
+    filler_events: Optional[list[FillerEvent]] = None
 
 
 class NarrationListItem(BaseModel):

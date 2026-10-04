@@ -27,6 +27,7 @@ CREATE TABLE narrations (
     title TEXT NOT NULL,
     is_drill_response BOOLEAN NOT NULL DEFAULT FALSE,
     transcript TEXT,
+    delivery_data JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

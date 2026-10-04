@@ -26,6 +26,68 @@ export interface FeedbackItem {
   corrected_sentence: string;
 }
 
+// ── Delivery Analysis (new) ──
+
+export interface DeliveryBaselines {
+  global_pace_syll_per_sec: number | null;
+  global_pitch_hz: number | null;
+  global_loudness_db: number | null;
+}
+
+export interface DeliveryPattern {
+  type: string;
+  start_index: number;
+  end_index: number;
+  start_time: number;
+  end_time: number;
+}
+
+export interface DeliverySentenceEvent {
+  index: number;
+  text: string;
+  start: number;
+  end: number;
+  pause_before_s: number | null;
+  pause_after_s: number | null;
+  pace_syll_per_sec: number;
+  pace_label_vs_prev: string;
+  pace_label_vs_next: string;
+  pace_label_vs_global: string;
+  pace_label_vs_rolling: string;
+  pitch_semitone_vs_speaker_median: number | null;
+  pitch_range_semitones: number | null;
+  pitch_label_vs_prev: string;
+  pitch_label_vs_next: string;
+  loudness_db_vs_global: number | null;
+  loudness_label_vs_prev: string;
+  loudness_label_vs_next: string;
+  loudness_label_vs_rolling: string;
+}
+
+export interface DeliveryAnalysisResult {
+  baselines: DeliveryBaselines;
+  sentence_events: DeliverySentenceEvent[];
+  patterns: DeliveryPattern[];
+  delivery_feedback: string;
+}
+
+// ── Pause & Filler Events (new) ──
+
+export interface PauseEvent {
+  start: number;
+  end: number;
+  duration: number;
+  type: string; // "natural" | "hesitation" | "lost_train_of_thought"
+}
+
+export interface FillerEvent {
+  start: number;
+  end: number;
+  type: string; // "uh" | "um"
+  confidence: number;
+  source: string;
+}
+
 // ── Narration ──
 
 export interface NarrationSubmitResponse {
@@ -34,6 +96,10 @@ export interface NarrationSubmitResponse {
   transcript: string;
   feedback: FeedbackItem[];
   summary: string;
+  // New delivery analysis fields
+  delivery?: DeliveryAnalysisResult | null;
+  pause_events?: PauseEvent[] | null;
+  filler_events?: FillerEvent[] | null;
 }
 
 export interface NarrationListItem {
