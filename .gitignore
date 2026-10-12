@@ -20,7 +20,8 @@ venv.bak/
 .coverage
 htmlcov/
 *.log
-
+pipeline_development/.venv-1
+pipeline_development/.venv
 # Node / Frontend
 node_modules/
 dist/
@@ -28,6 +29,7 @@ dist-ssr/
 build/
 .next/
 out/
+new_features/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
