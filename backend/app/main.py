@@ -55,14 +55,25 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ── CORS (allow Vite dev server) ──
+import os
+
+# ── CORS (allow Vite dev server & production Vercel frontend) ──
+allowed_origins = [
+    "http://localhost:5173",  # Vite dev server
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",  # Fallback
+    "https://speech-partner-sem-project.vercel.app",  # Production Vercel frontend
+]
+
+# Allow additional origins via environment variable (comma-separated)
+extra_origins = os.getenv("CORS_ORIGINS", "")
+if extra_origins:
+    allowed_origins.extend([origin.strip() for origin in extra_origins.split(",") if origin.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",  # Fallback
-    ],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Allow Vercel preview deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,9 +86,11 @@ app.include_router(drills.router)
 
 # ── Health check ──
 @app.get("/", tags=["health"])
+@app.get("/health", tags=["health"])
 def health_check():
     return {
         "status": "healthy",
         "service": "Grammar Partner API",
         "version": "2.0.0",
     }
+
