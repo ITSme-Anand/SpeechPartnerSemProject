@@ -29,7 +29,17 @@ cp .env.example .env
 | `GEMINI_API_KEY` | Google Gemini API Key | `AIza...` |
 | `FRONTEND_URL` | Frontend origin for CORS | `https://speech-partner-sem-project.vercel.app` |
 | `CORS_ORIGINS` | Optional comma-separated list of extra allowed origins | `http://localhost:5173,https://my-preview.vercel.app` |
-| `PORT` | HTTP port to listen on (automatically set by Render) | `8000` (local) / `10000` (Render) |
+| `PORT` | HTTP port to listen on | `8000` |
+
+---
+
+## AWS EC2 Deployment (Docker)
+
+To deploy on an AWS EC2 instance:
+1. Run `./deploy-ec2.sh` for automated setup, swap check, and health verification.
+2. Or run `docker compose up -d --build`.
+
+See **[AWS_EC2_DEPLOYMENT_GUIDE.md](./AWS_EC2_DEPLOYMENT_GUIDE.md)** for full instructions, Security Group configuration, Swap memory setup, and HTTPS/SSL configuration.
 
 ---
 
@@ -47,6 +57,8 @@ uvicorn app.main:app --reload --port 8000
 
 ### 2. Docker Execution
 ```bash
+docker compose up -d --build
+# Or standalone:
 docker build -t speechpartner-backend .
 docker run --env-file .env -p 8000:8000 speechpartner-backend
 ```
@@ -61,6 +73,6 @@ docker run --env-file .env -p 8000:8000 speechpartner-backend
 
 ---
 
-## Render Deployment
+## Other Cloud Platforms
 
-See [RENDER_DEPLOYMENT_GUIDE.md](./RENDER_DEPLOYMENT_GUIDE.md) for full step-by-step instructions.
+- Render: See [RENDER_DEPLOYMENT_GUIDE.md](./RENDER_DEPLOYMENT_GUIDE.md).

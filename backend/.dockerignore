@@ -19,3 +19,7 @@ env/
 htmlcov/
 README.md
 RENDER_DEPLOYMENT_GUIDE.md
+AWS_EC2_DEPLOYMENT_GUIDE.md
+deploy-ec2.sh
+docker-compose*.yml
+Caddyfile

@@ -76,7 +76,7 @@ app = FastAPI(
 
 import os
 
-# ── CORS (allow Vite dev server, production frontend, and dynamic FRONTEND_URL) ──
+# ── CORS (allow Vite dev server, production frontend, dynamic FRONTEND_URL, and AWS origins) ──
 allowed_origins = [
     "http://localhost:5173",  # Vite dev server
     "http://127.0.0.1:5173",
@@ -102,10 +102,25 @@ if extra_origins:
 
 logger.info("Configured CORS allowed origins: %s", allowed_origins)
 
+# Regex pattern for allowed origins (Vercel previews, Render, AWS Amplify/CloudFront, local dev)
+origin_regex = (
+    r"https://.*\.vercel\.app|"
+    r"https://.*\.onrender\.com|"
+    r"https://.*\.amplifyapp\.com|"
+    r"https://.*\.cloudfront\.net|"
+    r"http://localhost(:\d+)?|"
+    r"http://127\.0\.0\.1(:\d+)?"
+)
+
+# If wildcard is explicitly provided in FRONTEND_URL or CORS_ORIGINS, allow all origins dynamically
+if "*" in allowed_origins:
+    allowed_origins = [o for o in allowed_origins if o != "*"]
+    origin_regex = r".*"
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com",  # Allow Vercel and Render previews
+    allow_origin_regex=origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

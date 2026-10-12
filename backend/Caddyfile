@@ -1,0 +1,20 @@
+# Caddyfile — Automatic SSL Reverse Proxy for Speech Partner Backend
+# ==============================================================================
+# Usage:
+# Set DOMAIN in your backend/.env (e.g., api.yourdomain.com OR <ip-dashes>.sslip.io)
+# Start with SSL: docker compose --profile ssl up -d
+# Caddy will automatically issue and renew a free Let's Encrypt SSL certificate!
+# ==============================================================================
+
+{$DOMAIN} {
+    reverse_proxy backend:8000
+
+    # Compression and security headers
+    encode gzip zstd
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+    }
+}
+
