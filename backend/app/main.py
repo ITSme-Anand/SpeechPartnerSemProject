@@ -23,28 +23,55 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-# ── Lifespan: load ML models once at startup ──
+# ── Limit PyTorch thread pools to reduce memory overhead on small hosts ──
+torch.set_num_threads(1)
+torch.set_num_interop_threads(1)
+
+
+class LazyModelProxy:
+    """Delays instantiating heavy ML models until first invocation so the
+    web server boots in milliseconds and easily passes port checks within 512MB RAM."""
+
+    def __init__(self, loader_fn):
+        self._loader_fn = loader_fn
+        self._instance = None
+
+    def _get_instance(self):
+        if self._instance is None:
+            self._instance = self._loader_fn()
+        return self._instance
+
+    def __getattr__(self, name):
+        return getattr(self._get_instance(), name)
+
+
+# ── Lifespan: configure lazy model loading ──
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load heavy ML models at startup, release at shutdown."""
+    """Register lazy model loaders so the server binds the port immediately."""
     from app.speech_processing.vad_service import VADService
     from app.speech_processing.filler_model import FillerDetector
 
-    logger.info("Loading speech processing models...")
+    logger.info("Configuring speech processing model proxies...")
 
-    # VAD service (used by both pause detection and filler detection)
-    app.state.vad_service = VADService()
+    # Hugging Face ZeroGPU requires @spaces.GPU for CUDA operations;
+    # persistent background server models should run safely on CPU.
+    is_zero_gpu = bool(os.getenv("SPACES_ZERO_GPU"))
+    if is_zero_gpu or not torch.cuda.is_available():
+        device = "cpu"
+    else:
+        device = "cuda"
+    logger.info("Default compute device: %s (ZeroGPU detected: %s)", device, is_zero_gpu)
 
-    # Filler detector (wav2vec2 + classifier head)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    logger.info("Using device: %s", device)
-    app.state.filler_detector = FillerDetector(device=device)
 
-    logger.info("All speech processing models loaded.")
+    app.state.vad_service = LazyModelProxy(lambda: VADService())
+    app.state.filler_detector = LazyModelProxy(lambda: FillerDetector(device=device))
+
+    logger.info("Application ready to accept connections.")
     yield
 
-    # Cleanup (Python GC handles model memory)
-    logger.info("Shutting down speech processing models.")
+    logger.info("Shutting down application.")
+
 
 
 # ── FastAPI app ──

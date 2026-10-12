@@ -52,12 +52,25 @@ class FillerDetector:
     def __init__(self, device="cpu"):
         self.device = torch.device(device)
 
+        import gc
+
         logger.info("Loading wav2vec2 feature extractor and encoder (%s)...", WAV2VEC_MODEL_NAME)
         self.extractor = Wav2Vec2FeatureExtractor.from_pretrained(WAV2VEC_MODEL_NAME)
-        self.encoder = Wav2Vec2Model.from_pretrained(WAV2VEC_MODEL_NAME).to(self.device)
+        self.encoder = Wav2Vec2Model.from_pretrained(
+            WAV2VEC_MODEL_NAME,
+            low_cpu_mem_usage=True,
+        ).to(self.device)
         self.encoder.eval()
         for p in self.encoder.parameters():
             p.requires_grad = False
+
+        # Quantize linear layers to dynamic int8 on CPU to reduce RAM by ~65%
+        if self.device.type == "cpu":
+            logger.info("Applying dynamic int8 quantization to wav2vec2 encoder...")
+            self.encoder = torch.quantization.quantize_dynamic(
+                self.encoder, {nn.Linear}, dtype=torch.qint8
+            )
+            gc.collect()
 
         logger.info("Loading filler classifier head from %s...", CHECKPOINT_PATH)
         self.head = FillerClassifierHead().to(self.device)
@@ -65,6 +78,7 @@ class FillerDetector:
             torch.load(CHECKPOINT_PATH, map_location=self.device, weights_only=True)
         )
         self.head.eval()
+        gc.collect()
         logger.info("Filler detector ready.")
 
     @torch.no_grad()

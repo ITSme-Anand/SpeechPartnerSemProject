@@ -5,26 +5,35 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies:
-# - ffmpeg: required to decode and resample browser-recorded audio (WebM/Opus) to 16kHz WAV
-# - libsndfile1: required by soundfile / librosa for audio I/O
+# Install system dependencies (ffmpeg and libsndfile1 for audio decoding/processing)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install CPU-only PyTorch first (saves ~2GB download & memory vs default CUDA wheel)
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+# Set up non-root user (UID 1000 required by Hugging Face Spaces)
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH \
+    HF_HOME=/home/user/.cache/huggingface
+
+WORKDIR $HOME/app
+
+# Install CPU-only PyTorch first
+RUN pip install --no-cache-dir --user torch --index-url https://download.pytorch.org/whl/cpu
 
 # Install remaining Python packages
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --chown=user:user requirements.txt ./
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Copy backend application code
-COPY app ./app
+# Copy application source code
+COPY --chown=user:user app ./app
 
-# Render assigns dynamic PORT environment variable (defaults to 8000 for local runs)
-EXPOSE 8000
+# Hugging Face Spaces routes traffic to port 7860
+EXPOSE 7860
 
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+
+
 

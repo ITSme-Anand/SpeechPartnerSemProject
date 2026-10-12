@@ -176,11 +176,16 @@ def submit_narration(
         logger.info("Pause detection: %d pauses found", len(pause_events))
 
         # ── NEW: Filler Detection (shares VAD segments) ──
-        filler_detector = request.app.state.filler_detector
-        filler_events = detect_non_lexical_fillers(
-            audio_array, sr, vad_segments, word_timestamps, filler_detector,
-        )
-        logger.info("Filler detection: %d fillers found", len(filler_events))
+        filler_events = []
+        try:
+            filler_detector = request.app.state.filler_detector
+            filler_events = detect_non_lexical_fillers(
+                audio_array, sr, vad_segments, word_timestamps, filler_detector,
+            )
+            logger.info("Filler detection: %d fillers found", len(filler_events))
+        except Exception as e:
+            logger.warning("Filler detection skipped or failed (non-fatal): %s", e)
+
 
         # ── NEW: Delivery Analysis (prosodic features + LLM feedback) ──
         delivery_result = None
