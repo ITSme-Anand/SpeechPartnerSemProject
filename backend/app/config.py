@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     MAX_NARRATION_DURATION_SECONDS: int = 300  # 5 minutes
     MAX_DRILL_DURATION_SECONDS: int = 120  # 2 minutes
 
+    # Frontend URL and CORS
+    FRONTEND_URL: str = ""
+    CORS_ORIGINS: str = ""
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

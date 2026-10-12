@@ -54,15 +54,8 @@ async def lifespan(app: FastAPI):
 
     logger.info("Configuring speech processing model proxies...")
 
-    # Hugging Face ZeroGPU requires @spaces.GPU for CUDA operations;
-    # persistent background server models should run safely on CPU.
-    is_zero_gpu = bool(os.getenv("SPACES_ZERO_GPU"))
-    if is_zero_gpu or not torch.cuda.is_available():
-        device = "cpu"
-    else:
-        device = "cuda"
-    logger.info("Default compute device: %s (ZeroGPU detected: %s)", device, is_zero_gpu)
-
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.info("Default compute device: %s", device)
 
     app.state.vad_service = LazyModelProxy(lambda: VADService())
     app.state.filler_detector = LazyModelProxy(lambda: FillerDetector(device=device))
@@ -71,7 +64,6 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("Shutting down application.")
-
 
 
 # ── FastAPI app ──
@@ -84,7 +76,7 @@ app = FastAPI(
 
 import os
 
-# ── CORS (allow Vite dev server & production Vercel frontend) ──
+# ── CORS (allow Vite dev server, production frontend, and dynamic FRONTEND_URL) ──
 allowed_origins = [
     "http://localhost:5173",  # Vite dev server
     "http://127.0.0.1:5173",
@@ -92,15 +84,28 @@ allowed_origins = [
     "https://speech-partner-sem-project.vercel.app",  # Production Vercel frontend
 ]
 
-# Allow additional origins via environment variable (comma-separated)
+# Allow dynamic FRONTEND_URL environment variable
+frontend_url = os.getenv("FRONTEND_URL", "").strip()
+if frontend_url:
+    for url in frontend_url.split(","):
+        cleaned_url = url.strip().rstrip("/")
+        if cleaned_url and cleaned_url not in allowed_origins:
+            allowed_origins.append(cleaned_url)
+
+# Allow additional origins via CORS_ORIGINS environment variable (comma-separated)
 extra_origins = os.getenv("CORS_ORIGINS", "")
 if extra_origins:
-    allowed_origins.extend([origin.strip() for origin in extra_origins.split(",") if origin.strip()])
+    for origin in extra_origins.split(","):
+        cleaned_origin = origin.strip().rstrip("/")
+        if cleaned_origin and cleaned_origin not in allowed_origins:
+            allowed_origins.append(cleaned_origin)
+
+logger.info("Configured CORS allowed origins: %s", allowed_origins)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # Allow Vercel preview deployments
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.onrender\.com",  # Allow Vercel and Render previews
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

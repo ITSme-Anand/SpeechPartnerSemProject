@@ -6,7 +6,16 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+env/
 .env
+.env.*
+!.env.example
 .git/
 .gitignore
 .DS_Store
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+README.md
+RENDER_DEPLOYMENT_GUIDE.md

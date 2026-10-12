@@ -5,35 +5,40 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies (ffmpeg and libsndfile1 for audio decoding/processing)
+# Install system dependencies:
+# - ffmpeg: required to decode and resample browser-recorded audio (WebM/Opus) to 16kHz WAV
+# - libsndfile1: required by soundfile / librosa for audio I/O
+# - curl: container utility for health checks and connectivity debugging
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libsndfile1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up non-root user (UID 1000 required by Hugging Face Spaces)
-RUN useradd -m -u 1000 user
-USER user
-ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH \
-    HF_HOME=/home/user/.cache/huggingface
+# Create non-root user for security best practices
+RUN useradd -m -u 1000 appuser
 
-WORKDIR $HOME/app
+ENV HOME=/home/appuser \
+    PATH=/home/appuser/.local/bin:$PATH
 
-# Install CPU-only PyTorch first
+WORKDIR /app
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+# Install CPU-only PyTorch first (saves ~2GB download & memory vs default CUDA wheel)
 RUN pip install --no-cache-dir --user torch --index-url https://download.pytorch.org/whl/cpu
 
 # Install remaining Python packages
-COPY --chown=user:user requirements.txt ./
+COPY --chown=appuser:appuser requirements.txt ./
 RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Copy application source code
-COPY --chown=user:user app ./app
+# Copy backend application code
+COPY --chown=appuser:appuser app ./app
 
-# Hugging Face Spaces routes traffic to port 7860
-EXPOSE 7860
+# Expose default port (Render automatically sets $PORT at runtime, e.g. 10000)
+EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
-
-
-
+# Render dynamically sets $PORT environment variable; fallback to 8000 for local runs.
+# 'exec' replaces the shell with uvicorn so OS signals (SIGTERM/SIGINT) pass directly to the server.
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
