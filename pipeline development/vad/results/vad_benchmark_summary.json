@@ -1,0 +1,61 @@
+{
+  "dataset": "LibriParty eval split",
+  "sessions": 50,
+  "frame_hop_ms": 10.0,
+  "silero_available": true,
+  "silero_error": null,
+  "models": {
+    "Silero VAD": {
+      "precision": 0.998742,
+      "recall": 0.770118,
+      "frame_f1": 0.862212,
+      "accuracy": 0.892847,
+      "pause_precision": 0.315646,
+      "pause_recall": 0.841856,
+      "pause_f1": 0.449749,
+      "mean_pause_iou": 0.866069,
+      "mean_onset_error_sec": 0.426267,
+      "mean_offset_error_sec": 0.704059,
+      "boundary_within_250ms": 0.074595
+    },
+    "Neural CRNN": {
+      "precision": 0.614998,
+      "recall": 0.940972,
+      "frame_f1": 0.728989,
+      "accuracy": 0.671463,
+      "pause_precision": 0.063832,
+      "pause_recall": 0.287706,
+      "pause_f1": 0.102731,
+      "mean_pause_iou": 0.600656,
+      "mean_onset_error_sec": 0.693484,
+      "mean_offset_error_sec": 1.2241,
+      "boundary_within_250ms": 0.113157
+    },
+    "Classical VAD": {
+      "precision": 0.566756,
+      "recall": 0.959373,
+      "frame_f1": 0.695965,
+      "accuracy": 0.599068,
+      "pause_precision": 0.004645,
+      "pause_recall": 0.137724,
+      "pause_f1": 0.008854,
+      "mean_pause_iou": 0.345073,
+      "mean_onset_error_sec": 0.256941,
+      "mean_offset_error_sec": 0.365844,
+      "boundary_within_250ms": 0.10904
+    },
+    "Silero VAD (dev-tuned)": {
+      "precision": 0.998302,
+      "recall": 0.817779,
+      "frame_f1": 0.892532,
+      "accuracy": 0.915412,
+      "pause_precision": 0.623784,
+      "pause_recall": 0.844518,
+      "pause_f1": 0.707594,
+      "mean_pause_iou": 0.87229,
+      "mean_onset_error_sec": 0.410562,
+      "mean_offset_error_sec": 0.720287,
+      "boundary_within_250ms": 0.098549
+    }
+  }
+}

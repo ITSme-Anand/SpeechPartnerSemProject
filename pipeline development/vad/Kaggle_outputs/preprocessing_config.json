@@ -1,0 +1,10 @@
+{
+  "sample_rate": 16000,
+  "n_mels": 40,
+  "n_fft": 512,
+  "hop_length": 160,
+  "crop_frames": 300,
+  "eval_frames": 600,
+  "threshold": 0.4,
+  "architecture": "CNN frontend + 2-layer bidirectional LSTM + frame classifier"
+}

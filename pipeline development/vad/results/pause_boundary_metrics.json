@@ -1,0 +1,58 @@
+[
+  {
+    "split": "dev",
+    "model": "classical",
+    "annotated_pauses": 827,
+    "predicted_pauses": 628,
+    "matched_pauses": 294,
+    "pause_precision": 0.4681528662420382,
+    "pause_recall": 0.3555018137847642,
+    "pause_f1": 0.4041237113402062,
+    "mean_matched_iou": 0.823631605263448,
+    "mean_onset_error_sec": 0.897585034013605,
+    "mean_offset_error_sec": 1.238741496598639,
+    "boundary_within_tolerance": 0.027210884353741496
+  },
+  {
+    "split": "dev",
+    "model": "neural",
+    "annotated_pauses": 827,
+    "predicted_pauses": 665,
+    "matched_pauses": 552,
+    "pause_precision": 0.8300751879699249,
+    "pause_recall": 0.6674727932285369,
+    "pause_f1": 0.739946380697051,
+    "mean_matched_iou": 0.8621177168646467,
+    "mean_onset_error_sec": 0.9000543478260884,
+    "mean_offset_error_sec": 0.5808333333333334,
+    "boundary_within_tolerance": 0.15760869565217392
+  },
+  {
+    "split": "eval",
+    "model": "classical",
+    "annotated_pauses": 762,
+    "predicted_pauses": 603,
+    "matched_pauses": 292,
+    "pause_precision": 0.4842454394693201,
+    "pause_recall": 0.38320209973753283,
+    "pause_f1": 0.4278388278388278,
+    "mean_matched_iou": 0.8391556434875306,
+    "mean_onset_error_sec": 0.6943150684931502,
+    "mean_offset_error_sec": 0.9669178082191774,
+    "boundary_within_tolerance": 0.023972602739726026
+  },
+  {
+    "split": "eval",
+    "model": "neural",
+    "annotated_pauses": 762,
+    "predicted_pauses": 648,
+    "matched_pauses": 522,
+    "pause_precision": 0.8055555555555556,
+    "pause_recall": 0.6850393700787402,
+    "pause_f1": 0.7404255319148937,
+    "mean_matched_iou": 0.8774113215508191,
+    "mean_onset_error_sec": 0.809367816091953,
+    "mean_offset_error_sec": 0.6426436781609204,
+    "boundary_within_tolerance": 0.19540229885057472
+  }
+]

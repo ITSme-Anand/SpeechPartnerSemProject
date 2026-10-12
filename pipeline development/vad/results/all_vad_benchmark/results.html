@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAD Benchmark Results</title>
+    <!-- Importing Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-8 bg-gray-50 font-sans">
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-md border border-gray-100">
+        <h1 class="text-2xl font-bold mb-6 text-gray-800">VAD Benchmark Results</h1>
+        
+        <div class="overflow-x-auto">
+            <table class="table-auto w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700 text-sm border-b-2 border-gray-200">
+                        <th class="border-x px-4 py-3 font-semibold">Model</th>
+                        <th class="border-x px-4 py-3 font-semibold">Precision</th>
+                        <th class="border-x px-4 py-3 font-semibold">Recall</th>
+                        <th class="border-x px-4 py-3 font-semibold">Frame F1</th>
+                        <th class="border-x px-4 py-3 font-semibold">Accuracy</th>
+                        <th class="border-x px-4 py-3 font-semibold">Balanced Acc.</th>
+                        <th class="border-x px-4 py-3 font-semibold">Pause Precision</th>
+                        <th class="border-x px-4 py-3 font-semibold">Pause Recall</th>
+                        <th class="border-x px-4 py-3 font-semibold">Pause F1</th>
+                        <th class="border-x px-4 py-3 font-semibold">Mean Pause IOU</th>
+                        <th class="border-x px-4 py-3 font-semibold">Onset Error (s)</th>
+                        <th class="border-x px-4 py-3 font-semibold">Offset Error (s)</th>
+                        <th class="border-x px-4 py-3 font-semibold">Bound. ≤ 250ms</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    <tr class="hover:bg-blue-50 transition-colors border-b">
+                        <td class="border-x px-4 py-3 font-bold text-gray-900">CNN-BiLSTM</td>
+                        <td class="border-x px-4 py-3">0.9617</td>
+                        <td class="border-x px-4 py-3">0.9678</td>
+                        <td class="border-x px-4 py-3 text-blue-600 font-bold bg-blue-50/50">0.9639</td>
+                        <td class="border-x px-4 py-3">0.9680</td>
+                        <td class="border-x px-4 py-3">0.9686</td>
+                        <td class="border-x px-4 py-3">0.8120</td>
+                        <td class="border-x px-4 py-3">0.8878</td>
+                        <td class="border-x px-4 py-3">0.8425</td>
+                        <td class="border-x px-4 py-3">0.9275</td>
+                        <td class="border-x px-4 py-3">0.3809</td>
+                        <td class="border-x px-4 py-3 text-green-600 font-semibold">0.2463</td>
+                        <td class="border-x px-4 py-3">0.9557</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition-colors border-b bg-gray-50/50">
+                        <td class="border-x px-4 py-3 font-bold text-gray-900">Silero VAD (dev-tuned)</td>
+                        <td class="border-x px-4 py-3">0.9983</td>
+                        <td class="border-x px-4 py-3">0.8178</td>
+                        <td class="border-x px-4 py-3 text-blue-600 font-bold bg-blue-50/50">0.8925</td>
+                        <td class="border-x px-4 py-3">0.9154</td>
+                        <td class="border-x px-4 py-3">0.9083</td>
+                        <td class="border-x px-4 py-3">0.6238</td>
+                        <td class="border-x px-4 py-3">0.8445</td>
+                        <td class="border-x px-4 py-3">0.7076</td>
+                        <td class="border-x px-4 py-3">0.8723</td>
+                        <td class="border-x px-4 py-3">0.4106</td>
+                        <td class="border-x px-4 py-3">0.7203</td>
+                        <td class="border-x px-4 py-3">0.6324</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition-colors border-b">
+                        <td class="border-x px-4 py-3 font-bold text-gray-900">Silero VAD (default)</td>
+                        <td class="border-x px-4 py-3">0.9987</td>
+                        <td class="border-x px-4 py-3">0.7701</td>
+                        <td class="border-x px-4 py-3 text-blue-600 font-bold bg-blue-50/50">0.8622</td>
+                        <td class="border-x px-4 py-3">0.8928</td>
+                        <td class="border-x px-4 py-3">0.8846</td>
+                        <td class="border-x px-4 py-3">0.3156</td>
+                        <td class="border-x px-4 py-3">0.8419</td>
+                        <td class="border-x px-4 py-3">0.4497</td>
+                        <td class="border-x px-4 py-3">0.8661</td>
+                        <td class="border-x px-4 py-3">0.4263</td>
+                        <td class="border-x px-4 py-3">0.7041</td>
+                        <td class="border-x px-4 py-3">0.5587</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition-colors border-b bg-gray-50/50">
+                        <td class="border-x px-4 py-3 font-bold text-gray-900">Neural CRNN</td>
+                        <td class="border-x px-4 py-3">0.6150</td>
+                        <td class="border-x px-4 py-3">0.9410</td>
+                        <td class="border-x px-4 py-3 text-blue-600 font-bold bg-blue-50/50">0.7290</td>
+                        <td class="border-x px-4 py-3">0.6715</td>
+                        <td class="border-x px-4 py-3">0.6943</td>
+                        <td class="border-x px-4 py-3">0.0638</td>
+                        <td class="border-x px-4 py-3">0.2877</td>
+                        <td class="border-x px-4 py-3">0.1027</td>
+                        <td class="border-x px-4 py-3">0.6007</td>
+                        <td class="border-x px-4 py-3">0.6935</td>
+                        <td class="border-x px-4 py-3 text-red-500">1.2241</td>
+                        <td class="border-x px-4 py-3">0.4182</td>
+                    </tr>
+                    <tr class="hover:bg-blue-50 transition-colors border-b">
+                        <td class="border-x px-4 py-3 font-bold text-gray-900">Classical VAD</td>
+                        <td class="border-x px-4 py-3">0.5668</td>
+                        <td class="border-x px-4 py-3">0.9594</td>
+                        <td class="border-x px-4 py-3 text-blue-600 font-bold bg-blue-50/50">0.6960</td>
+                        <td class="border-x px-4 py-3">0.5991</td>
+                        <td class="border-x px-4 py-3">0.6181</td>
+                        <td class="border-x px-4 py-3">0.0046</td>
+                        <td class="border-x px-4 py-3">0.1377</td>
+                        <td class="border-x px-4 py-3">0.0089</td>
+                        <td class="border-x px-4 py-3">0.3451</td>
+                        <td class="border-x px-4 py-3 text-green-600 font-semibold">0.2569</td>
+                        <td class="border-x px-4 py-3">0.3658</td>
+                        <td class="border-x px-4 py-3">0.2926</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
