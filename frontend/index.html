@@ -6,6 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Grammar Partner — Improve Your Spoken English</title>
     <meta name="description" content="AI-powered spoken English grammar analysis and personalized drill sessions. Record your speech, get instant feedback, and practice your weakest areas." />
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('speech_partner_theme');
+          var theme = saved === 'light' || saved === 'dark'
+            ? saved
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.classList.add(theme);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -4,6 +4,7 @@
 
 import { useAuth } from '../context/AuthContext';
 import { LogOut, Mic } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,12 +22,13 @@ export default function Layout({ children }: LayoutProps) {
         justifyContent: 'space-between',
         padding: '12px 24px',
         borderBottom: '1px solid var(--color-border)',
-        background: 'rgba(11, 15, 26, 0.8)',
+        background: 'var(--color-bg-nav)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         position: 'sticky',
         top: 0,
         zIndex: 100,
+        transition: 'background var(--transition-base), border-color var(--transition-base)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
@@ -37,6 +39,7 @@ export default function Layout({ children }: LayoutProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            boxShadow: '0 2px 8px var(--color-accent-glow)',
           }}>
             <Mic size={18} color="#fff" />
           </div>
@@ -52,21 +55,25 @@ export default function Layout({ children }: LayoutProps) {
           </span>
         </div>
 
-        {user && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span className="text-sm text-muted">
-              {user.email}
-            </span>
-            <button
-              className="btn btn-ghost btn-sm"
-              onClick={signOut}
-              title="Sign Out"
-            >
-              <LogOut size={16} />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <ThemeToggle />
+
+          {user && (
+            <>
+              <span className="text-sm text-muted" style={{ display: 'inline-block', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user.email}
+              </span>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={signOut}
+                title="Sign Out"
+              >
+                <LogOut size={16} />
+                <span>Sign Out</span>
+              </button>
+            </>
+          )}
+        </div>
       </nav>
 
       {/* ── Main Content ── */}

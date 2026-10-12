@@ -4,6 +4,7 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -20,9 +21,10 @@ import DrillSummaryPage from './pages/DrillSummaryPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Layout>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Layout>
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
@@ -54,6 +56,7 @@ function App() {
         </Layout>
       </BrowserRouter>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

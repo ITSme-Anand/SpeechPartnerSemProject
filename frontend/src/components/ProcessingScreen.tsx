@@ -43,7 +43,7 @@ export default function ProcessingScreen({
             inset: '16px',
             borderRadius: '50%',
             border: '3px solid transparent',
-            borderTopColor: 'rgba(255, 255, 255, 0.2)',
+            borderTopColor: 'var(--color-border-hover)',
             animation: 'spin 2s linear infinite',
           }} />
         </div>

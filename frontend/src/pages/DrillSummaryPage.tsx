@@ -124,7 +124,8 @@ export default function DrillSummaryPage() {
             }}>
               <div style={{
                 padding: 'var(--space-md)',
-                background: 'rgba(255, 255, 255, 0.03)',
+                background: 'var(--color-bg-card-subtle)',
+                border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-sm)',
               }}>
                 <p className="text-sm text-muted" style={{ marginBottom: '4px' }}>Opportunities</p>
@@ -135,7 +136,8 @@ export default function DrillSummaryPage() {
 
               <div style={{
                 padding: 'var(--space-md)',
-                background: 'rgba(255, 255, 255, 0.03)',
+                background: 'var(--color-bg-card-subtle)',
+                border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-sm)',
               }}>
                 <p className="text-sm text-muted" style={{ marginBottom: '4px' }}>Errors</p>
@@ -151,7 +153,8 @@ export default function DrillSummaryPage() {
 
               <div style={{
                 padding: 'var(--space-md)',
-                background: 'rgba(255, 255, 255, 0.03)',
+                background: 'var(--color-bg-card-subtle)',
+                border: '1px solid var(--color-border)',
                 borderRadius: 'var(--radius-sm)',
               }}>
                 <p className="text-sm text-muted" style={{ marginBottom: '4px' }}>Accuracy</p>
@@ -179,7 +182,8 @@ export default function DrillSummaryPage() {
                     key={idx}
                     style={{
                       padding: 'var(--space-md)',
-                      background: 'rgba(255, 255, 255, 0.02)',
+                      background: 'var(--color-bg-card-subtle)',
+                      border: '1px solid var(--color-border)',
                       borderRadius: 'var(--radius-sm)',
                       borderLeft: '3px solid var(--color-accent-primary)',
                     }}

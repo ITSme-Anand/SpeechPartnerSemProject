@@ -249,8 +249,9 @@ export default function ResultPage() {
                         key={idx}
                         style={{
                           padding: 'var(--space-md)',
-                          background: 'rgba(255, 255, 255, 0.02)',
+                          background: 'var(--color-bg-card-subtle)',
                           borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--color-border)',
                           borderLeft: '3px solid var(--color-accent-primary)',
                         }}
                       >
